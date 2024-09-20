@@ -48,14 +48,16 @@ fun MyApp(viewModel: LocationViewModel) {
     LocationDisplay(locationUtils = locationUtils,viewModel, context = context)
 }
 
-
-
 @Composable
 fun LocationDisplay(
     locationUtils: LocationUtils,
     viewModel: LocationViewModel,
     context: Context
 ) {
+    val location=viewModel.locationData.value
+
+    val address=location?.let { locationUtils.reverseGeocodeLocation(location) }
+
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { permissions ->
@@ -88,10 +90,15 @@ fun LocationDisplay(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Location is not available")
+        if (location != null) {
+            Text(text = "Latitude: ${location.latitude} Longitude: ${location.longitude} \n Address: $address")
+        } else {
+            Text(text = "Location is not available")
+        }
         Button(onClick = {
             if (locationUtils.hasLocationPermission(context)) {
-                // Do something when permission is already granted
+                locationUtils.requestLocationUpdates(viewModel)
+
             } else {
                 // Request the necessary permissions
                 requestPermissionLauncher.launch(
